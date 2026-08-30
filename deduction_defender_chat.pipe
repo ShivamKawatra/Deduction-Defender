@@ -25,7 +25,10 @@
         ]
       },
       "input": [
-        { "lane": "questions", "from": "chat_1" }
+        {
+          "lane": "questions",
+          "from": "chat_1"
+        }
       ]
     },
     {
@@ -35,12 +38,16 @@
         "profile": "custom",
         "custom": {
           "apikey": "${ROCKETRIDE_GEMINI_KEY}",
-          "model": "gemini-1.5-flash",
-          "modelTotalTokens": 4000
+          "model": "models/gemini-3.6-flash",
+          "modelTotalTokens": 4000,
+          "outputTokens": 200
         }
       },
       "input": [
-        { "lane": "questions", "from": "prompt_1" }
+        {
+          "lane": "questions",
+          "from": "prompt_1"
+        }
       ]
     },
     {
@@ -50,11 +57,18 @@
         "laneName": "analysis"
       },
       "input": [
-        { "lane": "answers", "from": "llm_gemini_1" }
+        {
+          "lane": "answers",
+          "from": "llm_gemini_1"
+        }
       ]
     }
   ],
-  "project_id": "85be2a13-ad93-49ed-a1e1-4b0f763ca618",
-  "viewport": { "x": 0, "y": 0, "zoom": 1 },
+  "project_id": "17ecef11-8733-4cf4-b06b-86345e21b76d",
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
   "version": 1
 }

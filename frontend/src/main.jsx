@@ -15,6 +15,8 @@ const queue = [
   { retailer: 'Costco', amount: '$203,700', status: 'Escalated', risk: 'High' }
 ]
 
+const API_BASE = 'http://localhost:8001'
+
 function App() {
   const [question, setQuestion] = React.useState('Please review a deduction for a retailer chargeback on a promotional claim.')
   const [answer, setAnswer] = React.useState('')
@@ -24,7 +26,7 @@ function App() {
   const askPipeline = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/chat', {
+      const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question })
@@ -47,7 +49,7 @@ function App() {
 
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/upload', {
+      const response = await fetch(`${API_BASE}/api/upload`, {
         method: 'POST',
         body: formData
       })

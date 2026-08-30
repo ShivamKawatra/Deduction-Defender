@@ -52,10 +52,13 @@ async def call_rocketride_pipeline(pipe_path: str, payload: str, file_name: Opti
     if not gemini_key:
         raise HTTPException(status_code=500, detail="ROCKETRIDE_GEMINI_KEY is required for Gemini-powered pipeline execution")
 
-    client = RocketRideClient()
+    client = RocketRideClient(uri=uri, auth=api_key)
     try:
         await client.connect()
-        result = await client.use(filepath=pipe_path)
+        result = await client.use(
+            filepath=pipe_path,
+            env={"ROCKETRIDE_GEMINI_KEY": gemini_key},
+        )
         token = result.get("token") if isinstance(result, dict) else None
 
         if not token:
