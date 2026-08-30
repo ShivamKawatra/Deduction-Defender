@@ -1,0 +1,20 @@
+Retailer: Walmart
+Remittance Period: May 2026
+Invoice ID: WM-45012
+
+Summary:
+- Gross sales: $842,000
+- Net received: $803,450
+- Deductions: $38,550
+
+Deduction details:
+1. Chargeback - Promotional allowance mismatch: $12,400
+2. Short payment - damaged carton claim: $5,200
+3. Unauthorized deductions - markdown support: $9,100
+4. Retail compliance deduction - display fee claim: $11,850
+
+Notes:
+- Promotion agreement valid through April 30, 2026
+- Display fee claim is outside approved programs
+- Damaged carton claim lacks proof of inspection photos
+- Unauthorized markdown deduction not listed in retailer contract

@@ -1,0 +1,10 @@
+Retailer Policy Reference
+
+Policy A: Promotional deductions require signed program approval and supporting documentation.
+Policy B: Display fee reimbursements are not valid unless included in approved allowance schedules.
+Policy C: Markdown support is only approved under a written exception approval.
+Policy D: Damaged product claims require receipt exception, inspection records, or photo evidence.
+Policy E: Deductions outside the approved time window are rejected unless approved in writing.
+
+Compliance standard:
+All deduction disputes must include at least one contract reference, one shipment reference, and one supporting evidence note.

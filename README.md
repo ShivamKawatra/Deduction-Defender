@@ -114,37 +114,58 @@ ROCKETRIDE_APIKEY=your_rocketride_api_key
 ROCKETRIDE_GEMINI_KEY=your_gemini_api_key
 ```
 
-### 2. Install backend dependencies
+### 2. Create and activate the backend virtual environment
+
+From the backend folder:
 
 ```bash
 cd Projects/DeductionDefender/backend
 python -m venv .venv
 .venv\Scripts\activate
+```
+
+After activation, your terminal prompt should show the virtual environment name, such as `(.venv)`.
+
+### 3. Install backend dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Install frontend dependencies
+### 4. Install frontend dependencies
 
 ```bash
-cd Projects/DeductionDefender/frontend
+cd ../frontend
 npm install
 ```
 
-### 4. Run the app
+### 5. Run the backend
 
-Backend:
+From the backend folder, with the virtual environment still active:
 
 ```bash
-cd Projects/DeductionDefender/backend
-.venv\Scripts\activate
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Frontend:
+This starts the FastAPI server on:
+
+```text
+http://localhost:8000
+```
+
+### 6. Run the frontend
+
+Open a new terminal and run:
 
 ```bash
 cd Projects/DeductionDefender/frontend
 npm run dev
+```
+
+Then open:
+
+```text
+http://localhost:5173
 ```
 
 Open the frontend at:
@@ -152,6 +173,37 @@ Open the frontend at:
 ```text
 http://localhost:5173
 ```
+
+## Architecture overview
+
+The project follows a simple but practical architecture for finance workflow automation:
+
+```mermaid
+flowchart LR
+    A[React Frontend] --> B[FastAPI Backend]
+    B --> C[RocketRide Pipelines]
+    C --> D[Gemini LLM]
+    D --> E[Decision Output]
+    C --> F[Remittance / Contracts / Shipment Data]
+    E --> G[Finance Analyst Review]
+```
+
+The architecture diagrams are available in the separate folder:
+
+- [architectures/deduction_defender_system_architecture.jpg](architectures/deduction_defender_system_architecture.jpg)
+- [architectures/rocketride_pipeline_architecture.jpg](architectures/rocketride_pipeline_architecture.jpg)
+
+## Production-style summary
+
+This prototype is designed to demonstrate a business-ready decision workflow for deduction operations. It supports the core operations a finance team needs:
+
+- review deduction claims quickly
+- compare documentation with remittance and contract data
+- prepare a case for dispute or write-off
+- escalate exceptions for human validation
+- reduce manual review time and improve recovery rates
+
+The result is a lightweight, AI-enabled operations dashboard that mirrors how a modern accounts-receivable or retail finance team might review deductions before escalation.
 
 ## Validation
 
