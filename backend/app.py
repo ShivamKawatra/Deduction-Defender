@@ -46,8 +46,11 @@ async def call_rocketride_pipeline(pipe_path: str, payload: str, file_name: Opti
 
     uri = os.getenv("ROCKETRIDE_URI")
     api_key = os.getenv("ROCKETRIDE_APIKEY")
+    gemini_key = os.getenv("ROCKETRIDE_GEMINI_KEY")
     if not uri or not api_key:
         raise HTTPException(status_code=500, detail="ROCKETRIDE_URI and ROCKETRIDE_APIKEY are required")
+    if not gemini_key:
+        raise HTTPException(status_code=500, detail="ROCKETRIDE_GEMINI_KEY is required for Gemini-powered pipeline execution")
 
     client = RocketRideClient()
     try:

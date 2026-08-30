@@ -27,13 +27,13 @@
       ]
     },
     {
-      "id": "llm_openai_1",
-      "provider": "llm_openai",
+      "id": "llm_gemini_1",
+      "provider": "llm_gemini",
       "config": {
         "profile": "custom",
         "custom": {
-          "apikey": "${ROCKETRIDE_OPENAI_KEY}",
-          "model": "gpt-4o-mini",
+          "apikey": "${ROCKETRIDE_GEMINI_KEY}",
+          "model": "gemini-1.5-flash",
           "modelTotalTokens": 4000
         }
       },
@@ -48,7 +48,7 @@
         "laneName": "deduction_review"
       },
       "input": [
-        { "lane": "answers", "from": "llm_openai_1" }
+        { "lane": "answers", "from": "llm_gemini_1" }
       ]
     }
   ],
