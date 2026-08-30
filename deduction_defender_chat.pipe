@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "id": "chat_1",
+      "provider": "chat",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "chat"
+      }
+    },
+    {
+      "id": "prompt_1",
+      "provider": "prompt",
+      "config": {
+        "instructions": [
+          "You are Deduction Defender, an analyst assistant for retail deduction review.",
+          "Review each deduction against the signed retailer agreement, promotion terms, remittance data, and shipment records.",
+          "Determine whether the deduction is valid, invalid, or needs analyst review.",
+          "For invalid deductions, explain the contract mismatch, summarize the evidence, and draft a dispute package with supporting proof references.",
+          "For valid deductions, explain the policy basis and recommend a write-off or approved adjustment only when the evidence supports it.",
+          "Any deduction above the policy threshold must be escalated for analyst approval before final resolution.",
+          "Return a concise recommendation with retailer, deduction type, amount, root cause, proof, and disposition."
+        ]
+      },
+      "input": [
+        { "lane": "questions", "from": "chat_1" }
+      ]
+    },
+    {
+      "id": "llm_openai_1",
+      "provider": "llm_openai",
+      "config": {
+        "profile": "custom",
+        "custom": {
+          "apikey": "${ROCKETRIDE_OPENAI_KEY}",
+          "model": "gpt-4o-mini",
+          "modelTotalTokens": 4000
+        }
+      },
+      "input": [
+        { "lane": "questions", "from": "prompt_1" }
+      ]
+    },
+    {
+      "id": "response_text_1",
+      "provider": "response_text",
+      "config": {
+        "laneName": "analysis"
+      },
+      "input": [
+        { "lane": "answers", "from": "llm_openai_1" }
+      ]
+    }
+  ],
+  "project_id": "85be2a13-ad93-49ed-a1e1-4b0f763ca618",
+  "viewport": { "x": 0, "y": 0, "zoom": 1 },
+  "version": 1
+}

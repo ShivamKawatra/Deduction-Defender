@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "id": "webhook_1",
+      "provider": "webhook",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "webhook"
+      }
+    },
+    {
+      "id": "prompt_1",
+      "provider": "prompt",
+      "config": {
+        "instructions": [
+          "Process the uploaded remittance file, promotion agreement, shipment records, and retailer compliance manual.",
+          "Identify retailer chargebacks and unauthorized deductions and compare them to what was actually authorized.",
+          "Explain missing evidence, contract mismatches, and which deduction should be disputed, written off, or escalated.",
+          "Create a structured evidence summary with retailer name, deduction type, amount, root cause, supporting proof, and decision status.",
+          "Any deduction above the policy threshold must be escalated for analyst review."
+        ]
+      },
+      "input": [
+        { "lane": "text", "from": "webhook_1" }
+      ]
+    },
+    {
+      "id": "llm_openai_1",
+      "provider": "llm_openai",
+      "config": {
+        "profile": "custom",
+        "custom": {
+          "apikey": "${ROCKETRIDE_OPENAI_KEY}",
+          "model": "gpt-4o-mini",
+          "modelTotalTokens": 4000
+        }
+      },
+      "input": [
+        { "lane": "questions", "from": "prompt_1" }
+      ]
+    },
+    {
+      "id": "response_text_1",
+      "provider": "response_text",
+      "config": {
+        "laneName": "deduction_review"
+      },
+      "input": [
+        { "lane": "answers", "from": "llm_openai_1" }
+      ]
+    }
+  ],
+  "project_id": "d1c640df-9f72-49cf-9ad7-5f0c90f72154",
+  "viewport": { "x": 0, "y": 0, "zoom": 1 },
+  "version": 1
+}
