@@ -1,0 +1,10 @@
+Promotion Agreement Reference: PA-2198
+Retailer: Retailer B
+Promotion Type: Endcap Placement
+Start Date: 2026-05-01
+End Date: 2026-05-31
+Terms: Retailer approved a 3% temporary markdown for in-store display placement only if supported by store-level execution proof.
+Supporting Requirement: Proof of placement photos and approved display confirmation must be submitted before any markdown recovery.
+Key Note: No written approval was provided for the additional 8% markdown recovery requested in the remittance.
+
+Result: This agreement does not support the deduction as submitted.

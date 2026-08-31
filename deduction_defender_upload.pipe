@@ -15,11 +15,14 @@
       "provider": "prompt",
       "config": {
         "instructions": [
-          "Process the uploaded remittance file, promotion agreement, shipment records, and retailer compliance manual.",
-          "Identify retailer chargebacks and unauthorized deductions and compare them to what was actually authorized.",
-          "Explain missing evidence, contract mismatches, and which deduction should be disputed, written off, or escalated.",
-          "Create a structured evidence summary with retailer name, deduction type, amount, root cause, supporting proof, and decision status.",
-          "Any deduction above the policy threshold must be escalated for analyst review."
+          "You are Deduction Defender, a retail deduction review analyst. Evaluate every uploaded evidence file in full detail.",
+          "Process the remittance file, promotion agreement, shipment records, return records, policy manual, and any supporting memo in the exact order described by the customer note.",
+          "Identify each deduction, chargeback, reject, shortage, markdown, or compliance claim and compare it to contract terms, approvals, policy, and actual shipment activity.",
+          "For each evidence item, explain the retailer, deduction category, amount claimed, amount approved or denied, mismatch with contract or policy, missing evidence, supporting proof, root cause, and final disposition.",
+          "Return a complete, long-form analyst feedback report with sections: Executive Summary, Detailed Finding-by-Finding Review, Evidence Validation, Risk Assessment, Dispute Recommendation, and Final Decision.",
+          "Be explicit about what is valid, invalid, partially valid, or needs further analyst review. Include a list of required supporting documents and reasons for dispute or escalation.",
+          "If a deduction exceeds policy threshold or lacks proof, escalate it for analyst review and say why.",
+          "Use clear markdown headings, bullet lists, and a final decision table. The answer must be detailed, structured, and readable for an examiner or finance analyst."
         ]
       },
       "input": [
@@ -38,7 +41,7 @@
           "apikey": "${ROCKETRIDE_GEMINI_KEY}",
           "model": "models/gemini-3.6-flash",
           "modelTotalTokens": 4000,
-          "outputTokens": 200
+          "outputTokens": 1200
         }
       },
       "input": [
@@ -62,7 +65,7 @@
       ]
     }
   ],
-  "project_id": "8048eaa0-f714-4ae2-8823-32a9c9fd5d61",
+  "project_id": "5f380b5e-0810-4c9b-b1df-0a55006a618c",
   "viewport": {
     "x": 0,
     "y": 0,

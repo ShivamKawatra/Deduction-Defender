@@ -38,6 +38,18 @@ The goal of Deduction Defender is to automate the early-stage review of deductio
 
 This helps finance teams recover revenue faster, reduce manual effort, and improve consistency in review decisions.
 
+## Dashboard behavior
+
+The overview page is designed to update after every review action. When a new deduction is analyzed or a new evidence file is uploaded, the dashboard recalculates a live snapshot of the review queue:
+
+- total cases analyzed increases
+- potentially invalid cases increase when the AI result indicates a dispute-worthy deduction
+- analyst-review count updates for borderline or unsupported cases
+- potential recovery value increases based on the deduced claim value
+- the review queue is re-ordered with the newest case first
+
+This keeps the overview card set synchronized with the latest AI decision instead of showing stale demo values.
+
 ## Project goals
 
 This prototype demonstrates how an AI workflow can support the deduction review process by combining:
@@ -67,6 +79,22 @@ This project uses RocketRide pipelines to create an AI review workflow:
 
 - `deduction_defender_chat.pipe` — conversational analyst workflow for reviewing specific deduction cases
 - `deduction_defender_upload.pipe` — file-based workflow for uploaded remittance or agreement content
+
+## Sample evidence bundle
+
+The project includes several sample input files in the `sample/` folder for live testing and demo review:
+
+- `sample/promotion_agreement_1.txt`
+- `sample/promotion_agreement_2.txt`
+- `sample/retailer_policy_note.txt`
+- `sample/retailer_policy_note_2.txt`
+- `sample/retailer_remittance_1.txt`
+- `sample/retailer_remittance_2.txt`
+- `sample/shipment_record_1.txt`
+- `sample/shipment_record_2.txt`
+- `sample/sample_case_summary.md`
+
+These examples cover unsupported markdown claims, weak proof-of-delivery cases, policy violations, and retailer shortfall review scenarios.
 
 ## Tech stack
 
@@ -116,26 +144,26 @@ ROCKETRIDE_GEMINI_KEY=your_gemini_api_key
 
 ### 2. Create and activate the backend virtual environment
 
-From the backend folder:
+From the cloned project root:
 
-```bash
-cd Projects/DeductionDefender/backend
+```powershell
+cd DeductionDefender/backend
 python -m venv .venv
-.venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
 ```
 
 After activation, your terminal prompt should show the virtual environment name, such as `(.venv)`.
 
 ### 3. Install backend dependencies
 
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
 ### 4. Install frontend dependencies
 
-```bash
-cd ../frontend
+```powershell
+cd DeductionDefender/frontend
 npm install
 ```
 
@@ -143,23 +171,31 @@ npm install
 
 From the backend folder, with the virtual environment still active:
 
-```bash
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```powershell
+cd DeductionDefender/backend
+.\.venv\Scripts\python.exe -m uvicorn app:app --host 0.0.0.0 --port 8001
 ```
 
 This starts the FastAPI server on:
 
 ```text
-http://localhost:8000
+http://localhost:8001
+```
+
+If the app is already running, check it with:
+
+```powershell
+curl http://localhost:8001/health
 ```
 
 ### 6. Run the frontend
 
 Open a new terminal and run:
 
-```bash
-cd Projects/DeductionDefender/frontend
-npm run dev
+```powershell
+cd DeductionDefender/frontend
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
 Then open:
@@ -168,11 +204,11 @@ Then open:
 http://localhost:5173
 ```
 
-Open the frontend at:
+> If port 5173 is already in use, Vite will automatically switch to the next available port, such as 5174.
 
-```text
-http://localhost:5173
-```
+### 7. Test the project
+
+Use the sample evidence files under `sample/` to validate the upload flow and overview updates. Uploading a file triggers the backend pipeline, and the overview cards refresh automatically with the latest review result.
 
 ## Architecture overview
 
@@ -214,6 +250,18 @@ python check.py
 ```
 
 This checks that the RocketRide pipeline files are valid JSON and match the required structure.
+
+## Troubleshooting
+
+### Pipeline is already running
+
+This message usually indicates a stale or active RocketRide task rather than a frontend issue. In practice, it can happen when:
+
+- the RocketRide staging server is temporarily unavailable
+- the previous pipeline call has not completed cleanly
+- the client is retrying while another task is still active
+
+If this happens, check the backend health and retry the upload after a short wait. If the RocketRide service remains unavailable, the app will still keep the frontend responsive but will show the service-level error instead of a broken UI.
 
 ## Important note
 

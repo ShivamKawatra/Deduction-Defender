@@ -1,0 +1,12 @@
+Shipment Record / POD Summary
+Retailer: Retailer C
+Shipment ID: SHP-44792
+Carrier: NorthStar Logistics
+Dispatch Date: 2026-08-02
+Delivery Date: 2026-08-04
+Units Shipped: 1,220
+Units Received: 1,220
+Exception Code: None
+Proof of Delivery: Attached
+
+Observation: The POD confirms full receipt, and there is no documented shortage. The retailer deduction appears unsupported.

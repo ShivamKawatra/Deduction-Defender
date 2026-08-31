@@ -40,6 +40,31 @@ class ResultResponse(BaseModel):
     metadata: dict
 
 
+def extract_rocketride_answer(response):
+    if not isinstance(response, dict):
+        return "No detailed analysis returned by RocketRide."
+
+    result_types = response.get("result_types") or {}
+    for key, lane_type in result_types.items():
+        if lane_type == "answers":
+            answers = response.get(key, [])
+            if isinstance(answers, list) and answers:
+                first = answers[0]
+                if isinstance(first, str) and first.strip():
+                    return first.strip()
+
+    for key in ("answer", "answers", "deduction_review", "analysis", "result", "output", "text"):
+        value = response.get(key)
+        if isinstance(value, list) and value:
+            first = value[0]
+            if isinstance(first, str) and first.strip():
+                return first.strip()
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+
+    return "No detailed analysis returned by RocketRide."
+
+
 async def call_rocketride_pipeline(pipe_path: str, payload: str, file_name: Optional[str] = None):
     if RocketRideClient is None:
         raise HTTPException(status_code=500, detail="rocketride package is not installed")
@@ -64,7 +89,8 @@ async def call_rocketride_pipeline(pipe_path: str, payload: str, file_name: Opti
         if not token:
             raise HTTPException(status_code=500, detail="RocketRide pipeline did not return a token")
 
-        await client.send(token, payload)
+        send_result = await client.send(token, payload)
+        answer = extract_rocketride_answer(send_result)
         status = await client.get_task_status(token)
 
         if file_name:
@@ -72,7 +98,7 @@ async def call_rocketride_pipeline(pipe_path: str, payload: str, file_name: Opti
         else:
             metadata = {"status": status}
 
-        return {"ok": True, "token": token, "metadata": metadata}
+        return {"ok": True, "token": token, "answer": answer, "metadata": metadata}
     finally:
         await client.disconnect()
 
@@ -90,7 +116,7 @@ async def chat_route(payload: ChatRequest):
         return {
             "ok": True,
             "pipeline": "deduction_defender_chat.pipe",
-            "answer": f"Deduction Defender reviewed: {payload.question}\n\nSuggested working logic: classify deduction as valid, invalid, or analyst review; compare against contract, remittance, and shipment evidence; dispute invalid charges with proof; escalate high-dollar items.",
+            "answer": result.get("answer") or "No detailed analysis returned by RocketRide.",
             "metadata": result["metadata"],
         }
     except Exception as exc:
@@ -109,7 +135,13 @@ async def upload_route(file: UploadFile = File(...), note: str = Form("")):
             text = f"Uploaded file: {file.filename}. Analyst note: {note}"
 
         result = await call_rocketride_pipeline(str(UPLOAD_PIPE), text, file_name=file.filename)
-        return {"ok": True, "pipeline": "deduction_defender_upload.pipe", "message": "Upload processed", "metadata": result["metadata"]}
+        return {
+            "ok": True,
+            "pipeline": "deduction_defender_upload.pipe",
+            "message": "Upload processed and reviewed.",
+            "answer": result.get("answer") or "No detailed analysis returned by RocketRide.",
+            "metadata": result["metadata"],
+        }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 

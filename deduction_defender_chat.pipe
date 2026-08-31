@@ -17,11 +17,11 @@
         "instructions": [
           "You are Deduction Defender, an analyst assistant for retail deduction review.",
           "Review each deduction against the signed retailer agreement, promotion terms, remittance data, and shipment records.",
-          "Determine whether the deduction is valid, invalid, or needs analyst review.",
-          "For invalid deductions, explain the contract mismatch, summarize the evidence, and draft a dispute package with supporting proof references.",
+          "Determine whether the deduction is valid, invalid, partially valid, or needs analyst review.",
+          "For invalid deductions, explain the contract mismatch, summarize the evidence, and draft a detailed dispute package with supporting proof references.",
           "For valid deductions, explain the policy basis and recommend a write-off or approved adjustment only when the evidence supports it.",
           "Any deduction above the policy threshold must be escalated for analyst approval before final resolution.",
-          "Return a concise recommendation with retailer, deduction type, amount, root cause, proof, and disposition."
+          "Return a detailed long-form recommendation with retailer, deduction type, amount, root cause, proof, exception rationale, risk level, and final disposition. Use clear headings and bullet points."
         ]
       },
       "input": [
@@ -40,7 +40,7 @@
           "apikey": "${ROCKETRIDE_GEMINI_KEY}",
           "model": "models/gemini-3.6-flash",
           "modelTotalTokens": 4000,
-          "outputTokens": 200
+          "outputTokens": 1200
         }
       },
       "input": [
@@ -64,7 +64,7 @@
       ]
     }
   ],
-  "project_id": "17ecef11-8733-4cf4-b06b-86345e21b76d",
+  "project_id": "574d3846-d774-401e-b2a8-19fecb62736b",
   "viewport": {
     "x": 0,
     "y": 0,

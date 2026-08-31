@@ -1,0 +1,15 @@
+Retailer Remittance Summary
+Retailer: Retailer C
+Remittance Date: 2026-08-14
+Invoice Number: INV-88421
+Deduction Amount: $24,890
+Deduction Code: Shortage / Chargeback
+Reason: Shortage claim after promotional event
+
+Notes:
+- Seller delivered 1,220 units.
+- Retailer claims shortage of 211 units.
+- No signed shortage exception or carrier exception packet was attached.
+- Retailer supporting document references an internal adjustment with no proof of missing inventory.
+
+Assessment: The deduction is not supported by shipment evidence and should be challenged.

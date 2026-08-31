@@ -1,0 +1,7 @@
+Retailer Policy Note
+Section: Chargeback Eligibility
+Policy Statement: Claims for markdown and shortage deductions require written approval, valid proof of execution, and matching shipment records.
+Recovery Rule: If proof is missing or contradicts the shipment record, the claim is deemed unsupported.
+Escalation Note: High-value claims above $20,000 require internal analyst review before dispute settlement.
+
+Result: Without execution proof and shipment confirmation, the deduction should be denied or escalated for analyst review.
