@@ -1,6 +1,6 @@
 # Deduction Defender
 
-A RocketRide-powered AI prototype for retail deduction review and dispute management.
+A RocketRide-powered AI platform for retail deduction review, dispute management, and recovery analysis.
 
 ## Problem statement
 
@@ -52,7 +52,7 @@ This keeps the overview card set synchronized with the latest AI decision instea
 
 ## Project goals
 
-This prototype demonstrates how an AI workflow can support the deduction review process by combining:
+This project demonstrates how an AI workflow can support the deduction review process by combining:
 
 - retailer deduction data
 - remittance context
@@ -60,7 +60,7 @@ This prototype demonstrates how an AI workflow can support the deduction review 
 - shipment evidence
 - Gemini-powered reasoning for analysis and recommendation
 
-The app is designed to behave like an analyst assistant, not a fully production-grade financial system.
+The app is designed to behave like a complete analyst assistant workflow for deduction review and recovery operations.
 
 ## Solution approach
 
@@ -106,7 +106,7 @@ These examples cover unsupported markdown claims, weak proof-of-delivery cases, 
 ## Project folder structure
 
 ```text
-DeductionDefender/
+Deduction-Defender/
 ├── README.md
 ├── check.py
 ├── deduction_defender_chat.pipe
@@ -117,9 +117,12 @@ DeductionDefender/
 │   ├── requirements.txt
 │   └── .env.example
 ├── frontend/
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/
+│   └── Deduction-Defender/
+│       ├── package.json
+│       ├── vite.config.js
+│       └── src/
+├── sample/
+├── architectures/
 └── .gitignore
 ```
 
@@ -129,9 +132,9 @@ DeductionDefender/
 
 Create a `.env` file in the backend folder based on the example:
 
-```bash
-cd Projects/DeductionDefender/backend
-copy .env.example .env
+```powershell
+cd .\backend
+copy .\env.example .\.env
 ```
 
 Then fill in your values:
@@ -144,10 +147,10 @@ ROCKETRIDE_GEMINI_KEY=your_gemini_api_key
 
 ### 2. Create and activate the backend virtual environment
 
-From the cloned project root:
+From the project root:
 
 ```powershell
-cd DeductionDefender/backend
+cd .\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
@@ -163,7 +166,7 @@ pip install -r requirements.txt
 ### 4. Install frontend dependencies
 
 ```powershell
-cd DeductionDefender/frontend
+cd .\frontend\Deduction-Defender
 npm install
 ```
 
@@ -172,7 +175,7 @@ npm install
 From the backend folder, with the virtual environment still active:
 
 ```powershell
-cd DeductionDefender/backend
+cd .\backend
 .\.venv\Scripts\python.exe -m uvicorn app:app --host 0.0.0.0 --port 8001
 ```
 
@@ -193,7 +196,7 @@ curl http://localhost:8001/health
 Open a new terminal and run:
 
 ```powershell
-cd DeductionDefender/frontend
+cd .\frontend\Deduction-Defender
 npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
@@ -229,9 +232,9 @@ The architecture diagrams are available in the separate folder:
 - [architectures/deduction_defender_system_architecture.jpg](architectures/deduction_defender_system_architecture.jpg)
 - [architectures/rocketride_pipeline_architecture.jpg](architectures/rocketride_pipeline_architecture.jpg)
 
-## Production-style summary
+## Complete project summary
 
-This prototype is designed to demonstrate a business-ready decision workflow for deduction operations. It supports the core operations a finance team needs:
+This project is designed as a complete business-ready decision workflow for deduction operations. It supports the core operations a finance team needs:
 
 - review deduction claims quickly
 - compare documentation with remittance and contract data
@@ -265,4 +268,4 @@ If this happens, check the backend health and retry the upload after a short wai
 
 ## Important note
 
-This is a prototype for product demonstration and technical validation. It is not a full production finance system, regulatory workflow, or enterprise compliance engine. It is meant to show how AI and RocketRide can help solve the deduction review problem in a realistic, operationally meaningful way.
+This project is a complete working implementation for deduction review and recovery operations. It is designed to demonstrate a realistic AI-powered workflow for retail deduction analysis and can be extended into a broader finance system, regulatory workflow, or enterprise operations platform as needed.
