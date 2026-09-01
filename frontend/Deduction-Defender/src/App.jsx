@@ -9,12 +9,11 @@ const defaultStats = [
   { label: 'Needs Review', value: '0', meta: 'Live data', tone: '#f3e8ff' }
 ]
 
-const defaultQueue = [
-  { retailer: 'Target', caseName: 'Promotion deduction', amount: '$500', status: 'Needs Review', risk: 'amber' },
-  { retailer: 'Retailer B', caseName: 'Pricing deduction', amount: '$750', status: 'Potentially Invalid', risk: 'red' },
-  { retailer: 'Retailer C', caseName: 'Shipment deduction', amount: '$1,200', status: 'Needs Review', risk: 'amber' },
-  { retailer: 'Retailer D', caseName: 'Damage claim', amount: '$960', status: 'Valid', risk: 'green' }
-]
+// NOTE: previously seeded with sample rows (Target/$500, Retailer B/$750,
+// etc.) that displayed as if they were real cases before any analysis had
+// run. Starts empty now; real entries are added by updateDashboardFromAnalysis
+// once an actual analysis completes.
+const defaultQueue = []
 
 const evidenceItems = ['Agreement', 'Invoice', 'Remittance', 'Shipment POD', 'Policy Manual']
 
@@ -29,11 +28,14 @@ const navItems = ['Overview', 'Analyze', 'AI Assistant', 'Workflow']
 
 function App() {
   const [activeView, setActiveView] = React.useState('Overview')
-  const [retailer, setRetailer] = React.useState('Target')
-  const [invoice, setInvoice] = React.useState('INV-10452')
-  const [amount, setAmount] = React.useState('$1,500')
-  const [reason, setReason] = React.useState('Unsupported markdown deduction')
-  const [details, setDetails] = React.useState('Deduction exceeds promotional allowance and lacks retailer approval evidence.')
+  // NOTE: previously pre-filled with sample values (Target, $1,500, etc.)
+  // which looked like a real, already-analyzed case on first load. These
+  // now start blank; inputs show grey placeholder text instead.
+  const [retailer, setRetailer] = React.useState('')
+  const [invoice, setInvoice] = React.useState('')
+  const [amount, setAmount] = React.useState('')
+  const [reason, setReason] = React.useState('')
+  const [details, setDetails] = React.useState('')
   const [question, setQuestion] = React.useState('Please review this retailer deduction for unsupported markdown and chargeback claims.')
   const [chatInput, setChatInput] = React.useState('')
   const [chatAnswer, setChatAnswer] = React.useState('')
@@ -45,6 +47,13 @@ function App() {
   const [file, setFile] = React.useState(null)
   const [note, setNote] = React.useState('Review against remittance, shipment evidence, and retailer policy terms.')
   const [selectedEvidence, setSelectedEvidence] = React.useState(['Agreement', 'Invoice', 'Remittance'])
+
+  // NEW: values actually extracted from the latest AI analysis, shown in the
+  // "AI Decision" card. These are kept separate from the form's `amount`
+  // state so the card reflects the *result* of an analysis, not whatever the
+  // Overview form currently happens to contain.
+  const [displayAmount, setDisplayAmount] = React.useState(null)
+  const [displayRecovery, setDisplayRecovery] = React.useState(null)
 
   const parseCurrency = (value) => {
     const numeric = Number(String(value).replace(/[$,]/g, '').trim()) || 0
@@ -72,6 +81,67 @@ function App() {
     if (t.includes('review') || t.includes('analyst')) return 'ANALYST REVIEW'
     if (t.includes('valid') || t.includes('approved')) return 'VALID'
     return 'ANALYST REVIEW'
+  }
+
+  // NEW: pull a dollar figure out of the AI's free-text report by looking
+  // for one of several candidate labels near a "$1,234.56"-style number.
+  // The label can appear either BEFORE the number ("Total deduction: $500")
+  // or AFTER it ("$500 in total deductions" / "$500** total deductions"),
+  // since the AI report phrases things both ways. Markdown bold markers
+  // (**) around either side are tolerated. Returns null if nothing matches.
+  const extractAmount = (text, labels) => {
+    if (!text) return null
+    const amountToken = '\\$([0-9][0-9,]*(?:\\.[0-9]{1,2})?)'
+
+    for (const label of labels) {
+      // label ... $amount  (e.g. "Deduction Amount: $1,500")
+      const before = new RegExp(`${label}\\W{0,40}${amountToken}`, 'i')
+      const beforeMatch = text.match(before)
+      if (beforeMatch) return `$${beforeMatch[1]}`
+
+      // $amount ... label  (e.g. "$34,500.00** in total deductions")
+      const after = new RegExp(`${amountToken}\\**\\W{0,40}${label}`, 'i')
+      const afterMatch = text.match(after)
+      if (afterMatch) return `$${afterMatch[1]}`
+    }
+    return null
+  }
+
+  // Fallback: if none of the labeled patterns hit, just grab the largest
+  // dollar figure mentioned anywhere in the text. Rough, but better than N/A
+  // when the report uses phrasing we didn't anticipate.
+  const extractLargestAmount = (text) => {
+    if (!text) return null
+    const matches = [...text.matchAll(/\$([0-9][0-9,]*(?:\.[0-9]{1,2})?)/g)]
+    if (!matches.length) return null
+    const values = matches.map((m) => Number(m[1].replace(/,/g, '')))
+    const max = Math.max(...values)
+    const idx = values.indexOf(max)
+    return `$${matches[idx][1]}`
+  }
+
+  // NEW: given a finished analysis' text, figure out what to show in the
+  // "Deduction Amount" / "Potential Recovery" tiles. Falls back to the form
+  // amount / a placeholder when the report doesn't contain a parseable figure.
+  const updateDisplayFigures = (resultText, fallbackAmount) => {
+    const parsedAmount = extractAmount(resultText, [
+      'total deduction[s]?',
+      'deduction amount',
+      'gross deduction[s]?',
+      'net remittance(?: received)?',
+      'audit target',
+      'amount in dispute'
+    ])
+    const parsedRecovery = extractAmount(resultText, [
+      'potential recovery',
+      'recoverable amount',
+      'recovery amount',
+      'estimated recovery',
+      'recommended recovery'
+    ])
+
+    setDisplayAmount(parsedAmount || fallbackAmount || extractLargestAmount(resultText) || null)
+    setDisplayRecovery(parsedRecovery || null)
   }
 
   const updateDashboardFromAnalysis = (resultText, caseAmount = amount, retailerName = retailer) => {
@@ -108,6 +178,12 @@ function App() {
   }
 
   const askPipeline = async () => {
+    if (!retailer.trim() || !amount.trim()) {
+      setAnswer('Please fill in at least Retailer and Deduction Amount before running an analysis.')
+      setActiveView('Analyze')
+      return
+    }
+
     const submission = [
       `Retailer: ${retailer}`,
       `Invoice / Reference: ${invoice}`,
@@ -127,6 +203,7 @@ function App() {
       const data = await parseApiResponse(response)
       const resultText = data.answer || data.message || 'No answer available'
       setAnswer(resultText)
+      updateDisplayFigures(resultText, amount)
       updateDashboardFromAnalysis(resultText, amount, retailer)
       setActiveView('Analyze')
     } catch (error) {
@@ -134,6 +211,8 @@ function App() {
         ? 'Request error: backend is not reachable on http://localhost:8001. Start the FastAPI backend and try again.'
         : `Error: ${error.message}`
       setAnswer(message)
+      setDisplayAmount(null)
+      setDisplayRecovery(null)
     } finally {
       setLoading(false)
     }
@@ -163,6 +242,10 @@ function App() {
         : ''
       const resultText = detailText + metadataText
       setAnswer(resultText)
+      // Upload flow has no reliable "amount" from the form, so pass null as
+      // the fallback — if the report doesn't contain a parseable figure,
+      // the tile will show a placeholder instead of stale form state.
+      updateDisplayFigures(resultText, null)
       updateDashboardFromAnalysis(resultText, amount, retailer)
       setActiveView('Analyze')
     } catch (error) {
@@ -170,6 +253,8 @@ function App() {
         ? 'Upload error: backend is not reachable on http://localhost:8001. Start the FastAPI backend and try again.'
         : `Upload error: ${error.message}`
       setAnswer(message)
+      setDisplayAmount(null)
+      setDisplayRecovery(null)
     } finally {
       setLoading(false)
     }
@@ -310,25 +395,25 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, color: '#374151' }}>Retailer</label>
-              <input value={retailer} onChange={(e) => setRetailer(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
+              <input value={retailer} onChange={(e) => setRetailer(e.target.value)} placeholder="e.g. Target" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, color: '#374151' }}>Invoice / Reference</label>
-              <input value={invoice} onChange={(e) => setInvoice(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
+              <input value={invoice} onChange={(e) => setInvoice(e.target.value)} placeholder="e.g. INV-10452" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, color: '#374151' }}>Deduction Amount</label>
-              <input value={amount} onChange={(e) => setAmount(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
+              <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. $1,500" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, color: '#374151' }}>Deduction Reason</label>
-              <input value={reason} onChange={(e) => setReason(e.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
+              <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Unsupported markdown deduction" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #dbe3ee', boxSizing: 'border-box', fontSize: 15 }} />
             </div>
           </div>
 
           <div style={{ marginTop: 16 }}>
             <label style={{ display: 'block', marginBottom: 8, fontWeight: 700, color: '#374151' }}>Additional Details</label>
-            <textarea value={details} onChange={(e) => setDetails(e.target.value)} rows={5} style={{ width: '100%', borderRadius: 12, border: '1px solid #dbe3ee', padding: '12px 14px', fontSize: 15, boxSizing: 'border-box', resize: 'vertical' }} />
+            <textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Any extra context for the analysis..." rows={5} style={{ width: '100%', borderRadius: 12, border: '1px solid #dbe3ee', padding: '12px 14px', fontSize: 15, boxSizing: 'border-box', resize: 'vertical' }} />
           </div>
 
           <div style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -341,6 +426,11 @@ function App() {
 
         <div style={cardStyle}>
           <h3 style={{ marginTop: 0, marginBottom: 18 }}>Review Queue</h3>
+          {reviewQueue.length === 0 && (
+            <div style={{ color: '#6B7280', lineHeight: 1.8, fontSize: 14 }}>
+              No cases analyzed yet. Run an analysis to add one here.
+            </div>
+          )}
           <div style={{ display: 'grid', gap: 12 }}>
             {reviewQueue.map((item) => (
               <div key={`${item.retailer}-${item.caseName}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #edf2f7', borderRadius: 12, padding: '12px 14px' }}>
@@ -408,11 +498,16 @@ function App() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 18 }}>
               <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12 }}>
                 <div style={{ color: '#6B7280', fontSize: 12 }}>Deduction Amount</div>
-                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 6 }}>{amount}</div>
+                {/* FIXED: was the stale/unrelated form `amount`; now uses the
+                    figure parsed from this analysis' own report, falling
+                    back to the form amount only for the chat-based flow. */}
+                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 6 }}>{displayAmount || 'N/A'}</div>
               </div>
               <div style={{ background: '#f8fafc', borderRadius: 12, padding: 12 }}>
                 <div style={{ color: '#6B7280', fontSize: 12 }}>Potential Recovery</div>
-                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 6 }}>$500</div>
+                {/* FIXED: was hardcoded "$500" for every single analysis;
+                    now uses the figure parsed from this analysis' report. */}
+                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 6 }}>{displayRecovery || 'N/A'}</div>
               </div>
             </div>
 
