@@ -1,5 +1,4 @@
 import React from 'react'
-import ReactDOM from 'react-dom/client'
 
 const API_BASE = 'http://localhost:8001'
 
@@ -68,6 +67,7 @@ function App() {
 
   const getStatusFromAnswer = (text) => {
     const t = (text || '').toLowerCase()
+    if (t.startsWith('upload error') || t.startsWith('error:') || t.startsWith('request error')) return 'ERROR'
     if (t.includes('invalid') || t.includes('dispute') || t.includes('potentially invalid')) return 'POTENTIALLY INVALID'
     if (t.includes('review') || t.includes('analyst')) return 'ANALYST REVIEW'
     if (t.includes('valid') || t.includes('approved')) return 'VALID'
@@ -76,6 +76,7 @@ function App() {
 
   const updateDashboardFromAnalysis = (resultText, caseAmount = amount, retailerName = retailer) => {
     const status = getStatusFromAnswer(resultText)
+    if (status === 'ERROR') return
     const amountValue = parseCurrency(caseAmount)
 
     setDashboardStats((prev) => {
@@ -204,13 +205,15 @@ function App() {
   const statusColor = {
     VALID: '#dcfce7',
     'POTENTIALLY INVALID': '#fee2e2',
-    'ANALYST REVIEW': '#fef3c7'
+    'ANALYST REVIEW': '#fef3c7',
+    ERROR: '#f1f5f9'
   }
 
   const statusTextColor = {
     VALID: '#166534',
     'POTENTIALLY INVALID': '#b91c1c',
-    'ANALYST REVIEW': '#b45309'
+    'ANALYST REVIEW': '#b45309',
+    ERROR: '#475569'
   }
 
   const detectionStatus = answer ? getStatusFromAnswer(answer) : 'ANALYST REVIEW'
@@ -523,8 +526,4 @@ function App() {
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+export default App

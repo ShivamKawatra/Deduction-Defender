@@ -1,3 +1,4 @@
+import asyncio
 import os
 from pathlib import Path
 from typing import Optional
@@ -27,6 +28,7 @@ app.add_middleware(
 PIPE_DIR = Path(__file__).resolve().parent.parent
 CHAT_PIPE = PIPE_DIR / "deduction_defender_chat.pipe"
 UPLOAD_PIPE = PIPE_DIR / "deduction_defender_upload.pipe"
+PIPE_LOCK = asyncio.Lock()
 
 
 class ChatRequest(BaseModel):
@@ -77,30 +79,43 @@ async def call_rocketride_pipeline(pipe_path: str, payload: str, file_name: Opti
     if not gemini_key:
         raise HTTPException(status_code=500, detail="ROCKETRIDE_GEMINI_KEY is required for Gemini-powered pipeline execution")
 
-    client = RocketRideClient(uri=uri, auth=api_key)
-    try:
-        await client.connect()
-        result = await client.use(
-            filepath=pipe_path,
-            env={"ROCKETRIDE_GEMINI_KEY": gemini_key},
-        )
-        token = result.get("token") if isinstance(result, dict) else None
+    async with PIPE_LOCK:
+        client = RocketRideClient(uri=uri, auth=api_key)
+        token = None
+        try:
+            await client.connect()
+            result = await client.use(
+                filepath=pipe_path,
+                env={"ROCKETRIDE_GEMINI_KEY": gemini_key},
+            )
+            token = result.get("token") if isinstance(result, dict) else None
 
-        if not token:
-            raise HTTPException(status_code=500, detail="RocketRide pipeline did not return a token")
+            if not token:
+                raise HTTPException(status_code=500, detail="RocketRide pipeline did not return a token")
 
-        send_result = await client.send(token, payload)
-        answer = extract_rocketride_answer(send_result)
-        status = await client.get_task_status(token)
+            send_result = await client.send(token, payload)
+            answer = extract_rocketride_answer(send_result)
+            status = await client.get_task_status(token)
 
-        if file_name:
-            metadata = {"file_name": file_name, "status": status}
-        else:
-            metadata = {"status": status}
+            if file_name:
+                metadata = {"file_name": file_name, "status": status}
+            else:
+                metadata = {"status": status}
 
-        return {"ok": True, "token": token, "answer": answer, "metadata": metadata}
-    finally:
-        await client.disconnect()
+            return {"ok": True, "token": token, "answer": answer, "metadata": metadata}
+        finally:
+            # Always terminate the pipeline task before disconnecting.
+            # use() starts a pipeline keyed by the .pipe file's project_id/source,
+            # not by the websocket connection - disconnect() alone leaves it
+            # marked "running" server-side and the next use() call for the same
+            # pipe file fails with "Pipeline is already running."
+            if token:
+                try:
+                    await client.terminate(token)
+                except Exception:
+                    # Don't let cleanup failure mask the real result/error
+                    pass
+            await client.disconnect()
 
 
 @app.get("/health")
